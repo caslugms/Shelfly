@@ -10,7 +10,7 @@ const envPath = path.join(__dirname, '.env');
 dotenv.config({ path: envPath, override: true });
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 10000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 const GEMINI_API_KEY = String(process.env.GEMINI_API_KEY || '').trim();
 const gemini = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
@@ -309,7 +309,7 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Unexpected server error.' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Shelfly running at http://localhost:${PORT}`);
   console.log(`AI configured: ${Boolean(gemini)} | provider: Google Gemini | model: ${GEMINI_MODEL}`);
 });

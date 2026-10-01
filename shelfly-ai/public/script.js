@@ -10,6 +10,7 @@ const state = {
   saved: Number(localStorage.getItem(SAVED_KEY) || 0),
   stream: null,
   detector: null,
+  scanControls: null,
   scanning: false,
   currentPage: 'dashboard'
 };
@@ -660,61 +661,105 @@ async function lookupBarcode(barcode) {
 }
 
 async function startCamera() {
+  const video = $('cameraVideo');
+  const status = $('cameraStatus');
+
   if (!navigator.mediaDevices?.getUserMedia) {
-    $('cameraStatus').textContent = 'Camera is not supported here. Use the barcode field below.';
+    status.textContent = 'Camera access is not supported here. Use the barcode field below.';
+    return;
+  }
+
+  if (!window.ZXingBrowser?.BrowserMultiFormatReader) {
+    status.textContent = 'Barcode scanner could not be loaded. Please use the barcode field below.';
+    console.error('ZXing Browser library is not available.');
     return;
   }
 
   try {
-    state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
-    $('cameraVideo').srcObject = state.stream;
-    $('cameraVideo').style.display = 'block';
-    await $('cameraVideo').play();
+    stopCamera();
 
-    if ('BarcodeDetector' in window) {
-      const formats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'];
-      try { state.detector = new BarcodeDetector({ formats }); } catch { state.detector = new BarcodeDetector(); }
-      state.scanning = true;
-      $('cameraStatus').textContent = 'Point the camera at a barcode.';
-      scanFrame();
+    video.style.display = 'block';
+    video.setAttribute('playsinline', 'true');
+    video.muted = true;
+    video.autoplay = true;
+
+    const reader = new ZXingBrowser.BrowserMultiFormatReader();
+    state.detector = reader;
+    state.scanning = true;
+    status.textContent = 'Starting camera…';
+
+    const controls = await reader.decodeFromVideoDevice(
+      undefined,
+      video,
+      async (result, error) => {
+        if (!state.scanning) return;
+
+        if (result) {
+          const rawValue = result.getText?.() || result.text || '';
+          if (!rawValue) return;
+
+          state.scanning = false;
+          $('barcodeInput').value = rawValue;
+          status.textContent = `Barcode detected: ${rawValue}`;
+
+          try {
+            if (navigator.vibrate) navigator.vibrate(80);
+          } catch {
+            // Vibration is optional.
+          }
+
+          if (state.scanControls?.stop) state.scanControls.stop();
+          state.scanControls = null;
+          await lookupBarcode(rawValue);
+          return;
+        }
+
+        // ZXing emits a NotFoundException for normal frames without a match.
+        // Those are expected during continuous scanning and should not stop the camera.
+        if (error && error.name !== 'NotFoundException') {
+          console.debug('ZXing scan:', error);
+        }
+      }
+    );
+
+    state.scanControls = controls;
+    status.textContent = 'Point the camera at the barcode. Keep it inside the frame.';
+  } catch (error) {
+    console.error('Camera start failed:', error);
+    state.scanning = false;
+    state.scanControls = null;
+
+    if (error?.name === 'NotAllowedError') {
+      status.textContent = 'Camera permission was denied. Allow camera access and try again.';
+    } else if (error?.name === 'NotReadableError') {
+      status.textContent = 'The camera is already in use by another app. Close it and try again.';
     } else {
-      $('cameraStatus').textContent = 'Camera is on. Your browser does not support automatic barcode detection; type the code below.';
+      status.textContent = 'Could not start the camera. Use the barcode field below.';
     }
-  } catch (error) {
-    console.error(error);
-    $('cameraStatus').textContent = 'Camera permission was denied or unavailable.';
   }
-}
-
-async function scanFrame() {
-  if (!state.scanning || !state.detector) return;
-  try {
-    const codes = await state.detector.detect($('cameraVideo'));
-    if (codes?.length && codes[0].rawValue) {
-      state.scanning = false;
-      $('barcodeInput').value = codes[0].rawValue;
-      await lookupBarcode(codes[0].rawValue);
-      return;
-    }
-  } catch (error) {
-    console.debug('Barcode detection:', error.message);
-  }
-  requestAnimationFrame(scanFrame);
 }
 
 function stopCamera() {
   state.scanning = false;
+
+  if (state.scanControls?.stop) {
+    try { state.scanControls.stop(); } catch (error) { console.debug('Scanner stop:', error); }
+  }
+  state.scanControls = null;
   state.detector = null;
+
   if (state.stream) {
     state.stream.getTracks().forEach((track) => track.stop());
     state.stream = null;
   }
+
   const video = $('cameraVideo');
   if (video) {
-    video.pause();
+    try { video.pause(); } catch {}
     video.srcObject = null;
     video.style.display = 'none';
   }
+
   if ($('cameraStatus')) $('cameraStatus').textContent = 'Camera ready';
 }
 
