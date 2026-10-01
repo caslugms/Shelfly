@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f6f7f3" />
+  <title>Shelfly — Smart Food Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">Shelfly</div>
+          <div class="brand-subtitle">smart food, less waste</div>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-item active" data-page="dashboard"><span>⌂</span> Dashboard</button>
+        <button class="nav-item" data-page="food"><span>▦</span> My Food</button>
+        <button class="nav-item" data-page="recipes"><span>✦</span> AI Recipes</button>
+        <button class="nav-item" data-page="storage"><span>◇</span> Storage Tips</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="mini-card">
+          <div class="mini-icon">♻</div>
+          <div>
+            <strong>Waste less</strong>
+            <p>Use food before it is forgotten.</p>
+          </div>
+        </div>
+        <button class="notification-button" id="notificationButton">
+          <span>◌</span> Notifications <i id="notificationDot"></i>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">YOUR KITCHEN</div>
+          <h1 id="pageTitle">Good afternoon.</h1>
+          <p id="pageSubtitle">Here is what needs your attention today.</p>
+        </div>
+        <button class="primary-btn" id="scanTopBtn">＋ Scan food</button>
+      </header>
+
+      <section class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-label">Foods tracked</div>
+            <div class="stat-value" id="totalProducts">0</div>
+            <div class="stat-foot">items in your kitchen</div>
+          </article>
+          <article class="stat-card warning-card">
+            <div class="stat-label">Expiring soon</div>
+            <div class="stat-value" id="expiringProducts">0</div>
+            <div class="stat-foot">within the next 3 days</div>
+          </article>
+          <article class="stat-card green-card">
+            <div class="stat-label">Food saved</div>
+            <div class="stat-value" id="savedCount">0</div>
+            <div class="stat-foot">items used in time</div>
+          </article>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">ATTENTION</div>
+            <h2>Use these first</h2>
+          </div>
+          <button class="text-btn" id="viewAllFoodBtn">View all →</button>
+        </div>
+        <div id="expiringGrid" class="food-grid"></div>
+
+        <div class="dashboard-lower">
+          <section class="panel quick-actions-panel">
+            <div class="section-kicker">QUICK ACTIONS</div>
+            <h2>Keep your kitchen updated</h2>
+            <div class="quick-actions">
+              <button class="action-card" id="quickScan">
+                <span class="action-icon">▣</span>
+                <span><strong>Scan a product</strong><small>Use the camera or type the barcode.</small></span>
+              </button>
+              <button class="action-card" id="quickAdd">
+                <span class="action-icon">＋</span>
+                <span><strong>Add manually</strong><small>Enter a product and its expiration date.</small></span>
+              </button>
+              <button class="action-card" id="quickRecipes">
+                <span class="action-icon">✦</span>
+                <span><strong>Ask AI for recipes</strong><small>Use your inventory before it goes to waste.</small></span>
+              </button>
+            </div>
+          </section>
+
+          <section class="panel ai-preview-panel">
+            <div class="ai-badge">✦ GEMINI RECIPE ASSISTANT</div>
+            <h2>What can you cook tonight?</h2>
+            <p>Use the foods already in Shelﬂy and let AI prioritize what should be used first.</p>
+            <button class="dark-btn" id="dashboardRecipesBtn">Generate recipes</button>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="page-food">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">YOUR INVENTORY</div>
+            <h2>My Food</h2>
+          </div>
+          <button class="primary-btn small" id="addFoodBtn">＋ Add food</button>
+        </div>
+        <div class="toolbar">
+          <input id="foodSearch" type="search" placeholder="Search your food..." />
+          <select id="foodFilter">
+            <option value="all">All statuses</option>
+            <option value="fresh">Fresh</option>
+            <option value="soon">Expiring soon</option>
+            <option value="expired">Expired</option>
+            <option value="opened">Opened</option>
+          </select>
+        </div>
+        <div id="foodList" class="food-list"></div>
+      </section>
+
+      <section class="page" id="page-recipes">
+        <div class="section-head recipe-heading">
+          <div>
+            <div class="section-kicker">COOK WITH WHAT YOU HAVE</div>
+            <h2>Gemini Recipe Assistant</h2>
+            <p>Recipes use your current inventory and prioritize foods that should be used first. Gemini uses your current inventory and prioritizes foods that should be used first.</p>
+          </div>
+          <button class="primary-btn" id="generateRecipesBtn">✦ Generate with Gemini</button>
+        </div>
+        <div id="recipeStatus" class="recipe-status hidden"></div>
+        <div id="recipeGrid" class="recipe-grid"></div>
+      </section>
+
+      <section class="page" id="page-storage">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">MAKE FOOD LAST LONGER</div>
+            <h2>Storage Tips</h2>
+            <p>Simple guidance for common kitchen foods. Always follow the package instructions when they differ.</p>
+          </div>
+        </div>
+        <div id="storageGrid" class="storage-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="scannerModal">
+    <div class="modal scanner-modal">
+      <button class="modal-close" data-close="scannerModal">×</button>
+      <div class="section-kicker">IDENTIFY A PRODUCT</div>
+      <h2>Scan or enter the barcode</h2>
+      <p class="modal-copy">Shelfly will look up the product name from Open Food Facts.</p>
+
+      <div class="scanner-frame">
+        <video id="cameraVideo" playsinline muted></video>
+        <div class="scanner-corners"></div>
+        <div class="scanner-frame-label" id="cameraStatus">Camera ready</div>
+      </div>
+
+      <div class="scanner-controls">
+        <button class="secondary-btn" id="startCameraBtn">Start camera</button>
+        <button class="secondary-btn" id="stopCameraBtn">Stop camera</button>
+      </div>
+
+      <div class="divider"><span>or</span></div>
+
+      <div class="barcode-row">
+        <input id="barcodeInput" inputmode="numeric" autocomplete="off" placeholder="e.g. 7891000315507" />
+        <button class="primary-btn small" id="lookupBarcodeBtn">Find product</button>
+      </div>
+      <button class="text-btn demo-btn" id="demoMilkBtn">Use demo product</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="productModal">
+    <div class="modal product-modal">
+      <button class="modal-close" data-close="productModal">×</button>
+      <div class="section-kicker">ADD TO MY FOOD</div>
+      <h2 id="productModalTitle">Product details</h2>
+      <p class="modal-copy" id="productSourceNote">Enter the details Shelﬂy needs to track this food.</p>
+
+      <div id="productPreview" class="product-preview hidden"></div>
+
+      <form id="productForm">
+        <input id="productId" type="hidden" />
+        <input id="productBarcode" type="hidden" />
+        <input id="productImage" type="hidden" />
+        <input id="productSource" type="hidden" />
+
+        <div class="form-grid">
+          <label>
+            Product name
+            <input id="productName" name="productName" required />
+          </label>
+          <label>
+            Brand
+            <input id="productBrand" name="productBrand" placeholder="Optional" />
+          </label>
+          <label>
+            Category
+            <select id="productCategory" name="productCategory">
+              <option value="dairy">Dairy</option>
+              <option value="cheese">Cheese</option>
+              <option value="eggs">Eggs</option>
+              <option value="fruit">Fruit</option>
+              <option value="vegetables">Vegetables</option>
+              <option value="meat">Meat</option>
+              <option value="grains">Grains</option>
+              <option value="snacks">Snacks</option>
+              <option value="frozen">Frozen</option>
+              <option value="beverage">Beverage</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>
+            Expiration date
+            <input id="expirationDate" name="expirationDate" type="date" required />
+          </label>
+          <label>
+            Storage
+            <select id="storageSelect" name="storage">
+              <option value="Refrigerator">Refrigerator</option>
+              <option value="Freezer">Freezer</option>
+              <option value="Pantry">Pantry</option>
+              <option value="Counter">Counter</option>
+            </select>
+          </label>
+          <label>
+            Days after opening
+            <input id="afterOpening" name="afterOpening" type="number" min="0" max="365" placeholder="Optional" />
+          </label>
+          <label>
+            Purchase date
+            <input id="purchaseDate" name="purchaseDate" type="date" />
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary-btn" data-close="productModal">Cancel</button>
+          <button type="submit" class="primary-btn" id="saveProductBtn">Save food</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="notification-drawer hidden" id="notificationDrawer">
+    <div class="drawer-head">
+      <div>
+        <div class="section-kicker">ALERTS</div>
+        <h3>Notifications</h3>
+      </div>
+      <button class="modal-close static" id="closeNotifications">×</button>
+    </div>
+    <div id="notificationList" class="notification-list"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/script.js"></script>
+</body>
+</html>

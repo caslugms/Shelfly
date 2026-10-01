@@ -1,0 +1,20 @@
+{
+  "name": "shelfly-ai",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shelfly - food inventory and Gemini recipe assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@google/genai": "2.24.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1"
+  }
+}
